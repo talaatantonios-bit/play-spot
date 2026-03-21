@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -9,6 +9,9 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
+  @ApiCreatedResponse({ description: 'User successfully registered.' })
+  @ApiConflictResponse({ description: 'Email already exists.' })
+  @ApiBadRequestResponse({ description: 'Invalid input data.' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -26,6 +29,9 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login user' })
+  @ApiOkResponse({ description: 'User successfully logged in.' })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
+  @ApiBadRequestResponse({ description: 'Invalid input data.' })
   @ApiBody({
     schema: {
       type: 'object',
