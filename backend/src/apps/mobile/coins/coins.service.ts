@@ -5,9 +5,9 @@ import { TransactionType, TransactionDescription } from '../../../enums';
 @Injectable()
 export class CoinsService {
   private readonly logger = new Logger(CoinsService.name);
-  private readonly NEW_USER_COINS = (process.env.NEW_USER_COINS,100); // Define the new user reward amount here
+  private readonly NEW_USER_COINS = Number(process.env.NEW_USER_COINS || 100); // Define the new user reward amount here
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async addWelcomeCoins(userId: number): Promise<void> {
     try {
