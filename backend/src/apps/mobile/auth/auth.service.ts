@@ -1,16 +1,22 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { UserRepository } from '../users/repositories/user.repository';
 import { JwtService } from '@nestjs/jwt';
+import { CoinsService } from '../coins/coins.service';
 import * as bcrypt from 'bcrypt';
+import { validateEmail, validatePhoneNumber } from '../../../helpers/validation/validators';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
+    private readonly coinsService: CoinsService,
   ) {}
 
   async register(data: any) {
+    validateEmail(data.email);
+    validatePhoneNumber(data.phone);
+
     const existingUser = await this.userRepository.findByEmail(data.email);
     if (existingUser) {
       throw new ConflictException('Email already exists');
@@ -22,6 +28,8 @@ export class AuthService {
       ...data,
       password: hashedPassword,
     });
+
+    await this.coinsService.addWelcomeCoins(user.id);
 
     return this.generateTokens(user, true);
   }

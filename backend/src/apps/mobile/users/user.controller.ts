@@ -2,7 +2,7 @@ import { Controller, Get, UseGuards, HttpException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { GetCurrentUserId } from '../helpers/get-current-user-id.decorator';
+import { GetCurrentUserId } from '../../../helpers/get-current-user-id.decorator';
 
 @ApiTags('users')
 @ApiBearerAuth('JWT-auth')
