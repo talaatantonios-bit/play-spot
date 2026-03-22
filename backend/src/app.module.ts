@@ -6,9 +6,11 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './apps/mobile/auth/auth.module';
 import { UsersModule } from './apps/mobile/users/users.module';
 import { CoinsModule } from './apps/mobile/coins/coins.module';
+import { CategoryModule } from './apps/mobile/category/category.module';
+import { AdminCategoryModule } from './apps/admin/category/category.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, CoinsModule],
+  imports: [PrismaModule, AuthModule, UsersModule, CoinsModule, CategoryModule, AdminCategoryModule],
   controllers: [AppController],
   providers: [AppService],
 })
