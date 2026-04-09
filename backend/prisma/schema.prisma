@@ -1,15 +1,10 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum Role {
-  USER
-  SUPER_ADMIN
-  SHOP_ADMIN
 }
 
 model User {
@@ -24,20 +19,43 @@ model User {
   role       Role     @default(USER)
 
   coinTransactions CoinTransaction[]
+  shop             Shop?
 
   @@map("users")
 }
 
-enum TransactionType {
-  Debit
-  Credit
-}
+model Shop {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  logoUrl     String? @map("logo_url")
 
-enum TransactionDescription {
-  New_User     @map("New user")
-  Daily_Reward @map("Daily Reward")
-  Ad_Reward    @map("Ad Reward")
-  Booking
+  ownerId    Int    @unique @map("owner_id")
+  owner      User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerEmail String @map("owner_email")
+
+  subscriptionStart  DateTime?          @map("subscription_start")
+  subscriptionEnd    DateTime?          @map("subscription_end")
+  subscriptionStatus SubscriptionStatus @default(trial) @map("subscription_status")
+  subscriptionPlan   SubscriptionPlan   @default(basic) @map("subscription_plan")
+
+  phoneNumber   String?  @map("phone_number")
+  isActive      Boolean  @default(true) @map("is_active")
+  isBlocked     Boolean  @default(false) @map("is_blocked")
+  blockedReason String?  @map("blocked_reason")
+
+  totalBranches Int @default(0) @map("total_branches")
+  totalDevices  Int @default(0) @map("total_devices")
+  totalBookings Int @default(0) @map("total_bookings")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by")
+
+  @@index([ownerId])
+  @@index([subscriptionStatus])
+  @@index([isActive, subscriptionStatus])
+  @@map("shops")
 }
 
 model CoinTransaction {
@@ -60,9 +78,40 @@ model Category {
   imageUrl     String?  @map("image_url")
   displayOrder Int      @default(0) @map("display_order")
   isActive     Boolean  @default(true) @map("is_active")
-  locale       Json?   
+  locale       Json?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("categories")
+}
+
+enum Role {
+  USER
+  SUPER_ADMIN
+  SHOP_ADMIN
+}
+
+enum TransactionType {
+  Debit
+  Credit
+}
+
+enum TransactionDescription {
+  New_User     @map("New user")
+  Daily_Reward @map("Daily Reward")
+  Ad_Reward    @map("Ad Reward")
+  Booking
+}
+
+enum SubscriptionStatus {
+  trial
+  active
+  expired
+  cancelled
+}
+
+enum SubscriptionPlan {
+  basic
+  pro
+  enterprise
 }
