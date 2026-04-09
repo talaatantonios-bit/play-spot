@@ -4,27 +4,67 @@ import { BranchQueryDto } from './dto/branch-query.dto';
 import { PaginatedBranchResponse } from './responses/paginated-branch.response';
 import { MobileBranchResponse } from './responses/branch.response';
 
+function getBranchStatus(operatingHours: any): 'open' | 'close' {
+  if (!operatingHours) return 'close';
+
+  const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const now = new Date();
+  const dayName = daysOfWeek[now.getDay()];
+  const todayHours = operatingHours[dayName];
+
+  if (!todayHours || !todayHours.open || !todayHours.close) return 'close';
+
+  const [openHour, openMinute] = todayHours.open.split(':').map(Number);
+  const [closeHour, closeMinute] = todayHours.close.split(':').map(Number);
+
+  const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+  const openTotalMinutes = openHour * 60 + openMinute;
+  const closeTotalMinutes = closeHour * 60 + closeMinute;
+
+  // Handle case where closing time is past midnight
+  if (closeTotalMinutes < openTotalMinutes) {
+    if (currentTotalMinutes >= openTotalMinutes || currentTotalMinutes <= closeTotalMinutes) {
+      return 'open';
+    }
+    return 'close';
+  }
+
+  if (currentTotalMinutes >= openTotalMinutes && currentTotalMinutes <= closeTotalMinutes) {
+    return 'open';
+  }
+
+  return 'close';
+}
+
 @Injectable()
 export class MobileBranchService {
   private readonly logger = new Logger(MobileBranchService.name);
 
   constructor(private readonly branchRepository: MobileBranchRepository) {}
 
-  async findByShop(shopId: string, query: BranchQueryDto): Promise<PaginatedBranchResponse> {
+  async findByShop(query: BranchQueryDto): Promise<PaginatedBranchResponse> {
     try {
       const page = query.page ?? 1;
       const limit = query.limit ?? 10;
       const skip = (page - 1) * limit;
 
       const [branches, total] = await this.branchRepository.findActiveByShop({
-        shopId,
+        shopId: query.shopId,
         skip,
         take: limit,
         area: query.area,
       });
 
+      const data = branches.map((branch) => {
+        const branchData = branch as any;
+        return {
+          ...branchData,
+          status: getBranchStatus(branchData.operatingHours),
+        };
+      }) as MobileBranchResponse[];
+
       return {
-        data: branches as MobileBranchResponse[],
+        data,
         total,
         page,
         limit,
@@ -32,7 +72,7 @@ export class MobileBranchService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      this.logger.error(`Failed to fetch branches for shop ${shopId}`, error instanceof Error ? error.stack : error);
+      this.logger.error(`Failed to fetch branches for shop ${query.shopId}`, error instanceof Error ? error.stack : error);
       throw new InternalServerErrorException('Failed to fetch branches');
     }
   }
@@ -41,7 +81,12 @@ export class MobileBranchService {
     try {
       const branch = await this.branchRepository.findById(id);
       if (!branch || !branch.isActive) throw new NotFoundException('Branch not found');
-      return branch as MobileBranchResponse;
+      
+      const branchData = branch as any;
+      return {
+        ...branchData,
+        status: getBranchStatus(branchData.operatingHours),
+      } as MobileBranchResponse;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       this.logger.error(`Failed to fetch branch ${id}`, error instanceof Error ? error.stack : error);

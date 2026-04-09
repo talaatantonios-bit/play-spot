@@ -43,6 +43,10 @@ export class MobileBranchResponse {
   })
   operatingHours?: any;
 
+  @ApiProperty({ example: 'open', enum: ['open', 'close'], description: 'Current status based on operating hours' })
+  status?: string;
+
+
   @ApiProperty({ example: true })
   isActive: boolean;
 

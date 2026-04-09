@@ -13,14 +13,13 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class MobileBranchController {
   constructor(private readonly branchService: MobileBranchService) {}
 
-  @Get('shop/:shopId')
+  @Get()
   @ApiOperation({ summary: 'Get active branches of a shop — filter by area' })
   @ApiOkResponse({ type: PaginatedBranchResponse })
   findByShop(
-    @Param('shopId') shopId: string,
     @Query() query: BranchQueryDto,
   ) {
-    return this.branchService.findByShop(shopId, query);
+    return this.branchService.findByShop(query);
   }
 
   @Get(':id')

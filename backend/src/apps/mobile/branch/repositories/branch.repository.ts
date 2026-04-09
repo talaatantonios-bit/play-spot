@@ -3,7 +3,7 @@ import { PrismaService } from '../../../../prisma/prisma.service';
 import { Branch } from '@prisma/client';
 
 export interface FindBranchesParams {
-  shopId: string;
+  shopId?: string;
   skip: number;
   take: number;
   area?: string;
@@ -15,7 +15,7 @@ export class MobileBranchRepository {
 
   async findActiveByShop(params: FindBranchesParams): Promise<[Branch[], number]> {
     const where = {
-      shopId: params.shopId,
+      ...(params.shopId && { shopId: params.shopId }),
       isActive: true,
       ...(params.area && { area: { equals: params.area, mode: 'insensitive' as const } }),
     };
