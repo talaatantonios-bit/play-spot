@@ -1,12 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ShopAdminController } from './shopadmin.controller';
-import { ShopAdminService } from './shopadmin.service';
-import { ShopAdminRepository } from './repositories/shopadmin.repository';
-import { PrismaModule } from '../../prisma/prisma.module';
+import { ShopAdminShopModule } from './shop/shop.module';
+import { ShopAdminBranchModule } from './branch/branch.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [ShopAdminController],
-  providers: [ShopAdminService, ShopAdminRepository],
+  imports: [ShopAdminShopModule, ShopAdminBranchModule],
 })
 export class ShopAdminModule {}

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, InternalServerErrorException, Logger, HttpException } from '@nestjs/common';
 import { AdminShopRepository } from './shop.repository';
 import { UserRepository } from '../../mobile/users/repositories/user.repository';
+import { UploadService } from '../../../upload/upload.service';
 import { CreateShopDto } from './dto/create-shop.dto';
 import { UpdateShopDto } from './dto/update-shop.dto';
 import { BlockShopDto } from './dto/block-shop.dto';
@@ -14,9 +15,10 @@ export class AdminShopService {
   constructor(
     private readonly shopRepository: AdminShopRepository,
     private readonly userRepository: UserRepository,
+    private readonly uploadService: UploadService,
   ) {}
 
-  async createShop(dto: CreateShopDto, createdBy: string) {
+  async createShop(dto: CreateShopDto, createdBy: string, logo?: Express.Multer.File) {
     try {
       const owner = await this.userRepository.findById(dto.ownerId);
       if (!owner) throw new NotFoundException('Owner user not found');
@@ -25,10 +27,14 @@ export class AdminShopService {
       const existing = await this.shopRepository.findByOwnerId(dto.ownerId);
       if (existing) throw new ConflictException('This user already owns a shop');
 
+      let logoUrl: string | undefined;
+      if (logo) logoUrl = await this.uploadService.uploadImage('shop/logo/', logo);
+
       return await this.shopRepository.create({
         name: dto.name,
         description: dto.description,
         phoneNumber: dto.phoneNumber,
+        logoUrl,
         subscriptionStatus: dto.subscriptionStatus,
         subscriptionPlan: dto.subscriptionPlan,
         subscriptionStart: dto.subscriptionStart ? new Date(dto.subscriptionStart) : undefined,
@@ -81,11 +87,16 @@ export class AdminShopService {
     }
   }
 
-  async updateShop(id: string, dto: UpdateShopDto) {
+  async updateShop(id: string, dto: UpdateShopDto, logo?: Express.Multer.File) {
     try {
       await this.getShop(id);
+
+      let logoUrl: string | undefined;
+      if (logo) logoUrl = await this.uploadService.uploadImage('shop/logo/', logo);
+
       return await this.shopRepository.update(id, {
         ...dto,
+        ...(logoUrl && { logoUrl }),
         subscriptionStart: dto.subscriptionStart ? new Date(dto.subscriptionStart) : undefined,
         subscriptionEnd: dto.subscriptionEnd ? new Date(dto.subscriptionEnd) : undefined,
       });

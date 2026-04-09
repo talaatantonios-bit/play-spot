@@ -1,16 +1,20 @@
 import { Injectable, NotFoundException, ForbiddenException, InternalServerErrorException, Logger, HttpException } from '@nestjs/common';
-import { ShopAdminRepository } from './repositories/shopadmin.repository';
-import { UpdateMyShopDto } from './dto/update-my-shop.dto';
+import { ShopAdminShopRepository } from './shop.repository';
+import { UploadService } from '../../../upload/upload.service';
+import { ShopAdminUpdateShopDto } from './dto/update-shop.dto';
 
 @Injectable()
-export class ShopAdminService {
-  private readonly logger = new Logger(ShopAdminService.name);
+export class ShopAdminShopService {
+  private readonly logger = new Logger(ShopAdminShopService.name);
 
-  constructor(private readonly shopAdminRepository: ShopAdminRepository) {}
+  constructor(
+    private readonly shopRepository: ShopAdminShopRepository,
+    private readonly uploadService: UploadService,
+  ) {}
 
   async getMyShop(ownerId: number) {
     try {
-      const shop = await this.shopAdminRepository.findByOwnerId(ownerId);
+      const shop = await this.shopRepository.findByOwnerId(ownerId);
       if (!shop) throw new NotFoundException('Shop not found');
       if (shop.isBlocked) throw new ForbiddenException('Your shop has been blocked');
       return shop;
@@ -21,10 +25,17 @@ export class ShopAdminService {
     }
   }
 
-  async updateMyShop(ownerId: number, dto: UpdateMyShopDto) {
+  async updateMyShop(ownerId: number, dto: ShopAdminUpdateShopDto, logo?: Express.Multer.File) {
     try {
-      await this.getMyShop(ownerId);
-      return await this.shopAdminRepository.update(ownerId, dto);
+      const shop = await this.getMyShop(ownerId);
+
+      let logoUrl: string | undefined;
+      if (logo) logoUrl = await this.uploadService.uploadImage('shop/logo/', logo);
+
+      return await this.shopRepository.update(ownerId, {
+        ...dto,
+        ...(logoUrl && { logoUrl }),
+      });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       this.logger.error(`Failed to update shop for owner ${ownerId}`, error instanceof Error ? error.stack : error);

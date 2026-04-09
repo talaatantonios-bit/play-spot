@@ -1,5 +1,6 @@
-import { Controller, Post, Get, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Controller, Post, Get, Patch, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { AdminShopService } from './shop.service';
 import { CreateShopDto } from './dto/create-shop.dto';
 import { UpdateShopDto } from './dto/update-shop.dto';
@@ -22,13 +23,35 @@ export class AdminShopController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new shop (SuperAdmin only)' })
+  @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse({ type: ShopResponse })
   @ApiForbiddenResponse({ description: 'Only SUPER_ADMIN can access this endpoint.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['ownerId', 'name'],
+      properties: {
+        ownerId:           { type: 'integer' },
+        name:              { type: 'string' },
+        description:       { type: 'string' },
+        phoneNumber:       { type: 'string' },
+        subscriptionStatus:{ type: 'string', enum: ['trial', 'active', 'expired', 'cancelled'] },
+        subscriptionPlan:  { type: 'string', enum: ['basic', 'pro', 'enterprise'] },
+        subscriptionStart: { type: 'string', format: 'date-time' },
+        subscriptionEnd:   { type: 'string', format: 'date-time' },
+        totalBranches:     { type: 'integer', default: 0 },
+        totalDevices:      { type: 'integer', default: 0 },
+        logo:              { type: 'string', format: 'binary', description: 'Shop logo image' },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('logo'))
   createShop(
     @Body() dto: CreateShopDto,
     @GetCurrentUserId() userId: number,
+    @UploadedFile() logo?: Express.Multer.File,
   ) {
-    return this.shopService.createShop(dto, String(userId));
+    return this.shopService.createShop(dto, String(userId), logo);
   }
 
   @Get()
@@ -48,10 +71,32 @@ export class AdminShopController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a shop (SuperAdmin only)' })
+  @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: ShopResponse })
   @ApiNotFoundResponse({ description: 'Shop not found.' })
-  updateShop(@Param('id') id: string, @Body() dto: UpdateShopDto) {
-    return this.shopService.updateShop(id, dto);
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name:              { type: 'string' },
+        description:       { type: 'string' },
+        phoneNumber:       { type: 'string' },
+        isActive:          { type: 'boolean' },
+        subscriptionStatus:{ type: 'string', enum: ['trial', 'active', 'expired', 'cancelled'] },
+        subscriptionPlan:  { type: 'string', enum: ['basic', 'pro', 'enterprise'] },
+        subscriptionStart: { type: 'string', format: 'date-time' },
+        subscriptionEnd:   { type: 'string', format: 'date-time' },
+        logo:              { type: 'string', format: 'binary', description: 'Shop logo image' },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('logo'))
+  updateShop(
+    @Param('id') id: string,
+    @Body() dto: UpdateShopDto,
+    @UploadedFile() logo?: Express.Multer.File,
+  ) {
+    return this.shopService.updateShop(id, dto, logo);
   }
 
   @Patch(':id/block')
