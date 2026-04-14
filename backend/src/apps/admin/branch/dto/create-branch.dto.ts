@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateBranchDto {
   @ApiProperty({ example: 'uuid-of-shop' })
@@ -35,12 +35,14 @@ export class CreateBranchDto {
 
   @ApiPropertyOptional({ example: 30.0444 })
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsNumber()
   latitude?: number;
 
   @ApiPropertyOptional({ example: 31.2357 })
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsNumber()
   longitude?: number;

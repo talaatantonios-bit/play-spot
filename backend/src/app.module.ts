@@ -14,9 +14,24 @@ import { MobileShopModule } from './apps/mobile/shop/shop.module';
 import { ShopAdminModule } from './apps/shopadmin/shopadmin.module';
 import { AdminBranchModule } from './apps/admin/branch/branch.module';
 import { MobileBranchModule } from './apps/mobile/branch/branch.module';
+import { AdminDeviceModule } from './apps/admin/device/device.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, CoinsModule, CategoryModule, AdminCategoryModule, AdminAuthModule, AdminShopModule, MobileShopModule, ShopAdminModule, AdminBranchModule, MobileBranchModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    CoinsModule,
+    CategoryModule,
+    AdminCategoryModule,
+    AdminAuthModule,
+    AdminShopModule,
+    MobileShopModule,
+    ShopAdminModule,
+    AdminBranchModule,
+    MobileBranchModule,
+    AdminDeviceModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -52,6 +52,7 @@ model Shop {
   createdBy String?   @map("created_by")
 
   branches Branch[]
+  devices  Device[]
 
   @@index([ownerId])
   @@index([subscriptionStatus])
@@ -85,9 +86,93 @@ model Branch {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt      @map("updated_at")
 
+  devices Device[]
+
   @@index([shopId, isActive])
   @@index([city, isActive])
   @@map("branches")
+}
+
+model Device {
+  id          String   @id @default(uuid())
+
+  // Parent Relations
+  shopId      String   @map("shop_id")
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  branchId    String   @map("branch_id")
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Device Info
+  name                   String
+  deviceNumber           String?      @map("device_number")
+  deviceType             DeviceType   @map("device_type")
+  roomHourlyPrice        Int          @map("room_hourly_price")
+  singleHourlyPrice      Int          @map("single_hourly_price")
+  multiplayerHourlyPrice Int          @map("multiplayer_hourly_price")
+
+  // Status & Visibility
+  status       DeviceStatus @default(available)
+  isVipRoom    Boolean      @default(false) @map("is_vip_room")
+  maxPlayers   Int          @default(1) @map("max_players")
+  imageUrl     String?      @map("image_url")
+
+  // Stats & Meta
+  totalBookings Int     @default(0) @map("total_bookings")
+  isActive      Boolean @default(true) @map("is_active")
+  displayOrder  Int     @default(0) @map("display_order")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  // Relations
+  games DeviceGame[]
+
+  @@map("devices")
+  @@index([branchId, status, isActive])
+  @@index([shopId, deviceType])
+  @@index([status])
+}
+
+model Game {
+  id          String   @id @default(uuid())
+
+  // Basic Info
+  title       String
+  titleAr     String?  @map("title_ar")
+  categoryId  Int      @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  description   String?
+  coverImageUrl String? @map("cover_image_url")
+  isActive      Boolean @default(true) @map("is_active")
+  displayOrder  Int     @default(0) @map("display_order")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  // Relations
+  devices DeviceGame[]
+
+  @@map("games")
+  @@index([categoryId, isActive])
+}
+
+// Many-to-Many: Devices <-> Games
+model DeviceGame {
+  deviceId String @map("device_id")
+  device   Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  gameId String @map("game_id")
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  addedAt DateTime @default(now()) @map("added_at")
+
+  @@id([deviceId, gameId])
+  @@map("device_games")
+  @@index([deviceId])
+  @@index([gameId])
 }
 
 model CoinTransaction {
@@ -114,6 +199,8 @@ model Category {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  games Game[]
+
   @@map("categories")
 }
 
@@ -121,6 +208,21 @@ enum Role {
   USER
   SUPER_ADMIN
   SHOP_ADMIN
+}
+
+enum DeviceType {
+  PS4
+  PS5
+  VIP_PS5
+  Xbox_Series_X
+  Gaming_PC
+}
+
+enum DeviceStatus {
+  available
+  busy
+  offline
+  maintenance
 }
 
 enum TransactionType {
