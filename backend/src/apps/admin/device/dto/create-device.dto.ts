@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsBoolean, Min } from 'class-validator';
+import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsBoolean, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DeviceType } from '@prisma/client';
 
@@ -55,4 +55,10 @@ export class CreateDeviceDto {
   @IsInt()
   @Min(0)
   displayOrder?: number;
+
+  @ApiPropertyOptional({ example: ['uuid-1', 'uuid-2'], description: 'List of game IDs to associate with this device' })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  gameIds?: string[];
 }

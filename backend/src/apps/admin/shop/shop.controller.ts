@@ -114,4 +114,42 @@ export class AdminShopController {
   unblockShop(@Param('id') id: string) {
     return this.shopService.unblockShop(id);
   }
+
+  // ─── SHOP_ADMIN Endpoints ────────────────────────────────────────────────────
+
+  @Get('my/info')
+  @Roles(Role.SHOP_ADMIN)
+  @ApiOperation({ summary: 'Get my shop info (ShopAdmin only)' })
+  @ApiOkResponse({ type: ShopResponse })
+  @ApiNotFoundResponse({ description: 'Shop not found' })
+  @ApiForbiddenResponse({ description: 'Shop is blocked' })
+  getMyShop(@GetCurrentUserId() userId: number) {
+    return this.shopService.getMyShop(userId);
+  }
+
+  @Patch('my/info')
+  @Roles(Role.SHOP_ADMIN)
+  @ApiOperation({ summary: 'Update my shop info (ShopAdmin only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiOkResponse({ type: ShopResponse })
+  @ApiNotFoundResponse({ description: 'Shop not found' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name:        { type: 'string' },
+        description: { type: 'string' },
+        phoneNumber: { type: 'string' },
+        logo:        { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('logo'))
+  updateMyShop(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: UpdateShopDto,
+    @UploadedFile() logo?: Express.Multer.File,
+  ) {
+    return this.shopService.updateMyShop(userId, dto, logo);
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, InternalServerErrorException, Logger, HttpException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, InternalServerErrorException, Logger, HttpException } from '@nestjs/common';
 import { AdminShopRepository } from './shop.repository';
 import { UserRepository } from '../../mobile/users/repositories/user.repository';
 import { UploadService } from '../../../upload/upload.service';
@@ -126,6 +126,44 @@ export class AdminShopService {
       if (error instanceof HttpException) throw error;
       this.logger.error(`Failed to unblock shop ${id}`, error instanceof Error ? error.stack : error);
       throw new InternalServerErrorException('Failed to unblock shop');
+    }
+  }
+
+  // ─── SHOP_ADMIN Methods ──────────────────────────────────────────────────────
+
+  async getMyShop(ownerId: number) {
+    try {
+      const shop = await this.shopRepository.findByOwnerId(ownerId);
+      if (!shop) throw new NotFoundException('Shop not found');
+      if (shop.isBlocked) throw new ForbiddenException('Your shop has been blocked');
+      return shop;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(`Failed to get shop for owner ${ownerId}`, error instanceof Error ? error.stack : error);
+      throw new InternalServerErrorException('Failed to get shop');
+    }
+  }
+
+  async updateMyShop(ownerId: number, dto: Partial<UpdateShopDto>, logo?: Express.Multer.File) {
+    try {
+      const shop = await this.getMyShop(ownerId);
+
+      let logoUrl: string | undefined;
+      if (logo) logoUrl = await this.uploadService.uploadImage('shop/logo/', logo);
+
+      // SHOP_ADMIN can only update basic fields, not subscription or blocking
+      const allowedFields = {
+        name: dto.name,
+        description: dto.description,
+        phoneNumber: dto.phoneNumber,
+        ...(logoUrl && { logoUrl }),
+      };
+
+      return await this.shopRepository.update(shop.id, allowedFields);
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(`Failed to update shop for owner ${ownerId}`, error instanceof Error ? error.stack : error);
+      throw new InternalServerErrorException('Failed to update shop');
     }
   }
 }

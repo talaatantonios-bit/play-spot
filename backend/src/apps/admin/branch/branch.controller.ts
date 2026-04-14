@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Patch, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiForbiddenResponse, ApiConsumes, ApiBody, ApiBodyOptions, ApiQuery } from '@nestjs/swagger';
 import { AdminBranchService } from './branch.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
@@ -9,6 +9,8 @@ import { JwtAuthGuard } from '../../mobile/auth/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { Role } from '../../../enums/role.enum';
+import { GetCurrentUserId } from '../../../helpers/get-current-user-id.decorator';
+import { CreateBranchSwaggerBody, UpdateBranchSwaggerBody } from './branch.swagger';
 
 @ApiTags('admin/branch')
 @ApiBearerAuth('JWT-auth')
@@ -111,5 +113,78 @@ export class AdminBranchController {
   @ApiNotFoundResponse({ description: 'Branch not found.' })
   deleteBranch(@Param('id') id: string) {
     return this.branchService.deleteBranch(id);
+  }
+
+  // ─── SHOP_ADMIN Endpoints ────────────────────────────────────────────────────
+
+  @Post('my')
+  @Roles(Role.SHOP_ADMIN)
+  @ApiOperation({ summary: 'Create a branch in my shop (ShopAdmin only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiCreatedResponse({ type: AdminBranchResponse })
+  @ApiForbiddenResponse({ description: 'Shop is blocked' })
+  @ApiBody(CreateBranchSwaggerBody as ApiBodyOptions)
+  @UseInterceptors(FileInterceptor('image'))
+  createMyBranch(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: CreateBranchDto,
+    @UploadedFile() image?: Express.Multer.File,
+  ) {
+    return this.branchService.createMyBranch(userId, dto, image);
+  }
+
+  @Get('my/list')
+  @Roles(Role.SHOP_ADMIN)
+  @ApiOperation({ summary: 'List all my branches (ShopAdmin only)' })
+  @ApiOkResponse({ description: 'Paginated list of branches' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  listMyBranches(
+    @GetCurrentUserId() userId: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.branchService.listMyBranches(userId, page, limit);
+  }
+
+  @Get('my/:id')
+  @Roles(Role.SHOP_ADMIN)
+  @ApiOperation({ summary: 'Get my branch by ID (ShopAdmin only)' })
+  @ApiOkResponse({ type: AdminBranchResponse })
+  @ApiNotFoundResponse({ description: 'Branch not found' })
+  getMyBranch(
+    @GetCurrentUserId() userId: number,
+    @Param('id') id: string,
+  ) {
+    return this.branchService.getMyBranch(userId, id);
+  }
+
+  @Patch('my/:id')
+  @Roles(Role.SHOP_ADMIN)
+  @ApiOperation({ summary: 'Update my branch (ShopAdmin only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiOkResponse({ type: AdminBranchResponse })
+  @ApiNotFoundResponse({ description: 'Branch not found' })
+  @ApiBody(UpdateBranchSwaggerBody as ApiBodyOptions)
+  @UseInterceptors(FileInterceptor('image'))
+  updateMyBranch(
+    @GetCurrentUserId() userId: number,
+    @Param('id') id: string,
+    @Body() dto: UpdateBranchDto,
+    @UploadedFile() image?: Express.Multer.File,
+  ) {
+    return this.branchService.updateMyBranch(userId, id, dto, image);
+  }
+
+  @Delete('my/:id')
+  @Roles(Role.SHOP_ADMIN)
+  @ApiOperation({ summary: 'Delete my branch (ShopAdmin only)' })
+  @ApiOkResponse({ description: 'Branch deleted' })
+  @ApiNotFoundResponse({ description: 'Branch not found' })
+  deleteMyBranch(
+    @GetCurrentUserId() userId: number,
+    @Param('id') id: string,
+  ) {
+    return this.branchService.deleteMyBranch(userId, id);
   }
 }

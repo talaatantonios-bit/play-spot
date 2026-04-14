@@ -106,9 +106,9 @@ model Device {
   name                   String
   deviceNumber           String?      @map("device_number")
   deviceType             DeviceType   @map("device_type")
-  roomHourlyPrice        Int          @map("room_hourly_price")
-  singleHourlyPrice      Int          @map("single_hourly_price")
-  multiplayerHourlyPrice Int          @map("multiplayer_hourly_price")
+  roomHourlyPrice        Int?          @map("room_hourly_price")
+  singleHourlyPrice      Int?          @map("single_hourly_price")
+  multiplayerHourlyPrice Int?          @map("multiplayer_hourly_price")
 
   // Status & Visibility
   status       DeviceStatus @default(available)

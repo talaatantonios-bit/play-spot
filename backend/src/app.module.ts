@@ -11,10 +11,10 @@ import { AdminCategoryModule } from './apps/admin/category/category.module';
 import { AdminAuthModule } from './apps/admin/auth/auth.module';
 import { AdminShopModule } from './apps/admin/shop/shop.module';
 import { MobileShopModule } from './apps/mobile/shop/shop.module';
-import { ShopAdminModule } from './apps/shopadmin/shopadmin.module';
 import { AdminBranchModule } from './apps/admin/branch/branch.module';
 import { MobileBranchModule } from './apps/mobile/branch/branch.module';
 import { AdminDeviceModule } from './apps/admin/device/device.module';
+import { AdminGameModule } from './apps/admin/game/game.module';
 
 @Module({
   imports: [
@@ -27,10 +27,10 @@ import { AdminDeviceModule } from './apps/admin/device/device.module';
     AdminAuthModule,
     AdminShopModule,
     MobileShopModule,
-    ShopAdminModule,
     AdminBranchModule,
     MobileBranchModule,
     AdminDeviceModule,
+    AdminGameModule,
   ],
   controllers: [AppController],
   providers: [AppService],
