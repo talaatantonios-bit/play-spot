@@ -50,6 +50,14 @@ export class AdminDeviceService {
     return device;
   }
 
+  private logError(context: string, error: unknown) {
+    if (error instanceof Error) {
+      this.logger.error(`${context}: ${error.message}`, error.stack);
+    } else {
+      this.logger.error(`${context}:`, error);
+    }
+  }
+
   // ─── Public Methods ──────────────────────────────────────────────────────────
 
   async createDevice(shopId: string, branchId: string, dto: CreateDeviceDto, file?: Express.Multer.File) {
@@ -79,7 +87,7 @@ export class AdminDeviceService {
       return device;
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      this.logger.error('Failed to create device', error instanceof Error ? error.stack : error);
+      this.logError('Failed to create device', error);
       throw new InternalServerErrorException('Failed to create device');
     }
   }
@@ -95,7 +103,7 @@ export class AdminDeviceService {
       return { data: devices, total, page, limit, totalPages: Math.ceil(total / limit) };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      this.logger.error(`Failed to list devices for branch ${branchId}`, error instanceof Error ? error.stack : error);
+      this.logError(`Failed to list devices for branch ${branchId}`, error);
       throw new InternalServerErrorException('Failed to list devices');
     }
   }
@@ -105,7 +113,7 @@ export class AdminDeviceService {
       return await this.findDeviceOrFail(id);
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      this.logger.error(`Failed to get device ${id}`, error instanceof Error ? error.stack : error);
+      this.logError(`Failed to get device ${id}`, error);
       throw new InternalServerErrorException('Failed to get device');
     }
   }
@@ -126,7 +134,7 @@ export class AdminDeviceService {
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      this.logger.error(`Failed to update device ${id}`, error instanceof Error ? error.stack : error);
+      this.logError(`Failed to update device ${id}`, error);
       throw new InternalServerErrorException('Failed to update device');
     }
   }
@@ -137,7 +145,7 @@ export class AdminDeviceService {
       return await this.deviceRepository.delete(id);
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      this.logger.error(`Failed to delete device ${id}`, error instanceof Error ? error.stack : error);
+      this.logError(`Failed to delete device ${id}`, error);
       throw new InternalServerErrorException('Failed to delete device');
     }
   }

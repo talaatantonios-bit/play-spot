@@ -20,6 +20,7 @@ model User {
 
   coinTransactions CoinTransaction[]
   shop             Shop?
+  bookings         Booking[]
 
   @@map("users")
 }
@@ -53,6 +54,7 @@ model Shop {
 
   branches Branch[]
   devices  Device[]
+  bookings Booking[]
 
   @@index([ownerId])
   @@index([subscriptionStatus])
@@ -87,6 +89,7 @@ model Branch {
   updatedAt DateTime @updatedAt      @map("updated_at")
 
   devices Device[]
+  bookings Booking[]
 
   @@index([shopId, isActive])
   @@index([city, isActive])
@@ -127,6 +130,7 @@ model Device {
 
   // Relations
   games DeviceGame[]
+  bookings Booking[]
 
   @@map("devices")
   @@index([branchId, status, isActive])
@@ -186,6 +190,50 @@ model CoinTransaction {
   user User @relation(fields: [userId], references: [id])
 
   @@map("coin_transactions")
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+
+  // User
+  userId      Int           @map("user_id")
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Location
+  shopId      String        @map("shop_id")
+  shop        Shop          @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  branchId    String        @map("branch_id")
+  branch      Branch        @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  deviceId    String        @map("device_id")
+  device      Device        @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+
+  // Timing
+  startTime   DateTime      @map("start_time")
+  endTime     DateTime?     @map("end_time")
+
+  // Payment
+  transactionId String?     @map("transaction_id")
+  
+  // Status
+  status      BookingStatus @default(pending)
+  confirmedAt DateTime?     @map("confirmed_at")
+  cancelledAt DateTime?     @map("cancelled_at")
+
+  // Notes
+  userNotes   String?       @map("user_notes")
+  adminNotes  String?       @map("admin_notes")
+
+  // Timestamps
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@map("bookings")
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([shopId, status, startTime])
+  @@index([branchId, status, startTime])
+  @@index([deviceId, startTime])
+  @@index([deviceId, status, startTime])
+  @@index([status, startTime])
 }
 
 model Category {
@@ -248,4 +296,13 @@ enum SubscriptionPlan {
   basic
   pro
   enterprise
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  active
+  completed
+  cancelled
+  no_show
 }

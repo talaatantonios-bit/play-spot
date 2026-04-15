@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsEnum, IsInt, IsOptional, IsString, IsBoolean, IsUUID, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { DeviceType, DeviceStatus } from '@prisma/client';
 
 export class UpdateDeviceDto {
@@ -73,6 +73,19 @@ export class UpdateDeviceDto {
 
   @ApiPropertyOptional({ example: ['uuid-1', 'uuid-2'], description: 'Replaces all game associations for this device' })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch {
+        return [value];
+      }
+    }
+    return [value];
+  })
   @IsArray()
   @IsUUID('4', { each: true })
   gameIds?: string[];

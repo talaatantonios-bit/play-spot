@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsBoolean, IsUUID, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { DeviceType } from '@prisma/client';
 
 export class CreateDeviceDto {
@@ -58,6 +58,22 @@ export class CreateDeviceDto {
 
   @ApiPropertyOptional({ example: ['uuid-1', 'uuid-2'], description: 'List of game IDs to associate with this device' })
   @IsOptional()
+  @Transform(({ value }) => {
+    // Handle multipart/form-data where arrays might come as strings or single values
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      // Try to parse JSON array
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch {
+        // If not JSON, treat as single value
+        return [value];
+      }
+    }
+    return [value];
+  })
   @IsArray()
   @IsUUID('4', { each: true })
   gameIds?: string[];

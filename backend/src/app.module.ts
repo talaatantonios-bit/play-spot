@@ -15,6 +15,7 @@ import { AdminBranchModule } from './apps/admin/branch/branch.module';
 import { MobileBranchModule } from './apps/mobile/branch/branch.module';
 import { AdminDeviceModule } from './apps/admin/device/device.module';
 import { AdminGameModule } from './apps/admin/game/game.module';
+import { BookingModule } from './apps/mobile/booking/booking.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AdminGameModule } from './apps/admin/game/game.module';
     MobileBranchModule,
     AdminDeviceModule,
     AdminGameModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

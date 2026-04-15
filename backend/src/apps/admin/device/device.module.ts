@@ -18,6 +18,6 @@ import { PrismaModule } from '../../../prisma/prisma.module';
     AdminBranchRepository,
     AdminShopRepository,
   ],
-  exports: [AdminDeviceRepository],
+  exports: [AdminDeviceRepository, AdminDeviceGameRepository],
 })
 export class AdminDeviceModule {}
